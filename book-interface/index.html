@@ -376,7 +376,7 @@ body::after{
 <div class="player" id="player">
   <div class="disc"></div>
   <div class="ptxt" id="ptxt">未载入音轨</div>
-  <button class="pbtn" id="pbtn" aria-label="播放/暂停">▶</button>
+  <button class="pbtn" id="pbtn" aria-label="播放/暂停"><svg viewBox="0 0 24 24" width="13" height="13" style="vertical-align:middle"><polygon points="7 5 19 12 7 19" fill="currentColor"/></svg></button>
   <audio id="audio" loop preload="none"></audio>
 </div>
 
@@ -712,6 +712,8 @@ function showToast(msg){
 }
 
 /* ---------- music player ---------- */
+const PLAY_SVG='<svg viewBox="0 0 24 24" width="13" height="13" style="vertical-align:middle"><polygon points="7 5 19 12 7 19" fill="currentColor"/></svg>';
+const PAUSE_SVG='<svg viewBox="0 0 24 24" width="13" height="13" style="vertical-align:middle"><rect x="6" y="5" width="4" height="14" fill="currentColor"/><rect x="14" y="5" width="4" height="14" fill="currentColor"/></svg>';
 const player=document.getElementById('player');
 const audio=document.getElementById('audio');
 const pbtn=document.getElementById('pbtn');
@@ -725,8 +727,8 @@ pbtn.addEventListener('click',e=>{
     showToast('请提供音乐链接：在代码中设置 MUSIC_URL 即可启用播放器');
     return;
   }
-  if(audio.paused){audio.play();player.classList.add('playing');pbtn.textContent='❚❚';}
-  else{audio.pause();player.classList.remove('playing');pbtn.textContent='▶';}
+  if(audio.paused){audio.play();player.classList.add('playing');pbtn.innerHTML=PAUSE_SVG;}
+  else{audio.pause();player.classList.remove('playing');pbtn.innerHTML=PLAY_SVG;}
 });
 
 /* ---------- intro fade ---------- */
