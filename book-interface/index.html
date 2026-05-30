@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>长眠者的无明妒火 · 未亡人的绝命拥抱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Cinzel:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#ece4d6;
+  --ink-soft:#b7ad9d;
+  --ink-faint:#7c7468;
+  --blood:#c4121f;
+  --blood-bright:#ff2b3a;
+  --blood-deep:#7a0a12;
+  --paper-1:#191210;
+  --paper-2:#120c0b;
+  --paper-3:#1f1614;
+  --void:#070405;
+  --line:rgba(196,18,31,.32);
+  --line-soft:rgba(236,228,214,.10);
+  --serif:"Noto Serif SC",-apple-system,"Songti SC","STSong",serif;
+  --sans:"Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:"JetBrains Mono","Cinzel",ui-monospace,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;margin:0;}
+body{
+  font-family:var(--sans);
+  background:
+    radial-gradient(120% 90% at 50% -10%, #1a0d0f 0%, #0b0607 46%, #060304 100%),
+    #060304;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  position:fixed;
+  inset:0;
+  -webkit-user-select:none;user-select:none;
+  touch-action:none;
+}
+/* ambient grain + faint dossier grid, no heavy black shadow */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(196,18,31,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(196,18,31,.045) 1px,transparent 1px);
+  background-size:38px 38px;
+  mask-image:radial-gradient(80% 70% at 50% 45%,#000 30%,transparent 90%);
+  -webkit-mask-image:radial-gradient(80% 70% at 50% 45%,#000 30%,transparent 90%);
+  opacity:.5;
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/></svg>");
+  mix-blend-mode:overlay;
+}
+
+/* ===== stage / scene ===== */
+.stage{
+  position:relative;z-index:2;
+  width:min(86vw, calc((100vh - 132px) * 2 / 3));
+  aspect-ratio:2/3;
+  max-height:calc(100vh - 116px);
+  perspective:2200px;
+  perspective-origin:58% 50%;
+}
+.scene{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+}
+
+/* left thickness stack (already-read) + right thickness stack (remaining) for book body */
+.bookbody{position:absolute;inset:0;border-radius:6px 12px 12px 6px;}
+.edge{
+  position:absolute;top:1.4%;bottom:1.4%;width:14px;border-radius:3px;
+  background:repeating-linear-gradient(90deg,#e7dcc6 0 1px,#c2b69e 1px 2px,#d6cab2 2px 3px);
+  z-index:1;
+}
+.edge.right{right:-9px;transform:skewY(2deg);opacity:.9;}
+.edge.left{left:-9px;transform:skewY(-2deg);opacity:.55;}
+
+/* ===== pages ===== */
+.page{
+  position:absolute;inset:0;
+  transform-origin:left center;
+  transform-style:preserve-3d;
+  transition:transform 1.05s cubic-bezier(.62,.02,.2,1);
+  will-change:transform;
+}
+.page.flipped{transform:rotateY(-180deg);}
+.page.animating{}
+.face{
+  position:absolute;inset:0;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  overflow:hidden;
+  border-radius:5px 10px 10px 5px;
+  background:
+    linear-gradient(180deg,var(--paper-1),var(--paper-2));
+  border:1px solid rgba(236,228,214,.06);
+}
+.face.back{transform:rotateY(180deg);
+  background:
+    repeating-linear-gradient(180deg,rgba(236,228,214,.018) 0 2px,transparent 2px 26px),
+    linear-gradient(180deg,var(--paper-3),var(--paper-2));
+}
+/* page inner sheen / spine shade (NOT a bottom black shadow) */
+.face::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(0,0,0,.42) 0,rgba(0,0,0,0) 9%,rgba(0,0,0,0) 92%,rgba(255,255,255,.04) 100%);
+}
+/* moving流光 gloss while turning */
+.face::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.14) 48%,rgba(255,43,58,.10) 52%,transparent 70%);
+  transform:translateX(-30%);
+}
+.page.animating .face::after{animation:sheen 1.05s ease;}
+@keyframes sheen{0%{opacity:0;transform:translateX(-40%)}30%{opacity:1}100%{opacity:0;transform:translateX(60%)}}
+
+.pad{position:absolute;inset:0;padding:30px 26px 64px 30px;display:flex;flex-direction:column;}
+
+/* corner file marks shared */
+.cmark{position:absolute;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--ink-faint);}
+.cmark.tl{top:14px;left:16px;}
+.cmark.tr{top:14px;right:16px;color:var(--blood);}
+.cmark.bl{bottom:16px;left:16px;}
+.cmark.br{bottom:16px;right:16px;}
+.rule{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:0;}
+.rule.v{width:1px;height:auto;background:linear-gradient(180deg,transparent,var(--line),transparent);}
+
+/* ===== COVER (page 0) ===== */
+.cover .face.front{
+  background:
+    radial-gradient(140% 80% at 80% 8%,rgba(196,18,31,.16),transparent 55%),
+    linear-gradient(155deg,#241412 0%,#170d0c 40%,#0e0807 100%);
+  border:1px solid rgba(196,18,31,.22);
+}
+.cover-foil{
+  position:absolute;inset:9px;border:1px solid rgba(196,18,31,.45);border-radius:4px;
+  box-shadow:inset 0 0 0 1px rgba(236,228,214,.05);
+}
+.cover-foil::before{
+  content:"";position:absolute;inset:6px;border:1px dashed rgba(236,228,214,.16);border-radius:3px;
+}
+.cover-content{position:absolute;inset:0;padding:42px 30px;display:flex;flex-direction:column;}
+.dossier-no{font-family:var(--mono);font-size:11px;letter-spacing:.4em;color:var(--blood);}
+.dossier-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.32em;color:var(--ink-faint);margin-top:6px;}
+.cover-tags{margin-top:auto;display:flex;flex-wrap:wrap;gap:7px;justify-content:center;}
+.tag{
+  font-family:var(--sans);font-size:11px;letter-spacing:.16em;color:var(--ink-soft);
+  padding:5px 10px;border:1px solid var(--line);border-radius:2px;
+  background:rgba(196,18,31,.06);
+}
+.cover-title{
+  margin:18px 0 0;text-align:center;font-family:var(--serif);font-weight:900;
+  color:var(--ink);line-height:1.34;
+  font-size:clamp(21px,6.4vw,30px);
+  letter-spacing:.04em;
+  text-shadow:0 0 18px rgba(196,18,31,.25);
+}
+.cover-title .small{display:block;font-size:.62em;font-weight:700;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.16em;}
+.cover-title .flow{
+  background:linear-gradient(100deg,#ece4d6 18%,#ff7a84 38%,#c4121f 52%,#ece4d6 74%);
+  background-size:240% 100%;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:flow 6s linear infinite;
+}
+@keyframes flow{to{background-position:240% 0}}
+.cover-author{margin-top:14px;text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:.3em;color:var(--ink-faint);}
+.cover-author b{color:var(--blood-bright);font-weight:600;}
+
+/* lock clasp */
+.clasp{
+  position:absolute;top:50%;right:-4px;transform:translateY(-50%);
+  width:64px;height:96px;z-index:6;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.clasp .band{
+  position:absolute;left:-220px;right:6px;height:30px;border-radius:3px;
+  background:linear-gradient(180deg,#2a1715,#160c0b);
+  border:1px solid rgba(196,18,31,.4);
+  box-shadow:inset 0 1px 0 rgba(236,228,214,.08);
+}
+.clasp .lock{
+  position:relative;z-index:2;width:50px;height:62px;border-radius:7px;
+  background:linear-gradient(180deg,#3a2320,#1c0f0e);
+  border:1px solid rgba(196,18,31,.55);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 16px rgba(196,18,31,.25),inset 0 0 0 1px rgba(236,228,214,.06);
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.clasp .lock::after{
+  content:"";width:16px;height:16px;border:2px solid var(--blood-bright);border-radius:50%;
+  border-bottom-color:transparent;transform:rotate(45deg);
+  box-shadow:0 0 8px rgba(255,43,58,.6);
+}
+.clasp .lock .keyhole{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--blood-bright);bottom:14px;box-shadow:0 8px 0 -2px var(--blood-bright),0 0 10px var(--blood-bright);}
+.clasp:active .lock{transform:scale(.92);}
+.clasp.unlocking .lock{animation:lockpop .55s ease forwards;}
+@keyframes lockpop{40%{transform:translateX(6px) rotate(-8deg)}100%{transform:translateX(40px) rotate(-26deg);opacity:0}}
+.clasp-hint{
+  position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);
+  white-space:nowrap;font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--ink-faint);
+  animation:blink 2.4s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:.35}50%{opacity:.9}}
+
+/* ===== IMAGE PAGE ===== */
+.imgpage .pad{padding:22px;}
+.photo{
+  position:relative;flex:1;border-radius:3px;overflow:hidden;
+  border:1px solid var(--line);
+  background:#0c0807 center/cover no-repeat;
+}
+.photo img{width:100%;height:100%;object-fit:cover;display:block;filter:contrast(1.02) saturate(.96) brightness(.96);}
+.photo .scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(0,0,0,.10) 3px 4px);mix-blend-mode:multiply;}
+.photo .vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 40%,transparent 55%,rgba(8,4,5,.7));}
+.photo.noimg{background:radial-gradient(130% 90% at 50% 30%,#2a1413,#0c0807 70%);display:flex;align-items:center;justify-content:center;}
+.photo.noimg::before{content:'档 案 影 像';font-family:var(--serif);font-weight:900;color:rgba(196,18,31,.55);letter-spacing:.3em;font-size:22px;text-shadow:0 0 18px rgba(196,18,31,.4);}
+.photo.noimg::after{content:'IMAGE PENDING · 请确认图片链接';position:absolute;bottom:42%;font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--ink-faint);}
+.photo-cap{
+  position:absolute;left:10px;bottom:10px;right:10px;display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--ink);
+  text-shadow:0 1px 6px #000;
+}
+.stamp{
+  position:absolute;top:14px;right:14px;z-index:3;
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--blood-bright);
+  border:2px solid var(--blood-bright);padding:5px 9px;border-radius:3px;
+  transform:rotate(9deg);opacity:.85;
+  box-shadow:0 0 12px rgba(255,43,58,.25);
+}
+
+/* ===== shared text page header ===== */
+.kicker{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--blood);}
+.kicker .ln{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+.ptitle{font-family:var(--serif);font-weight:900;font-size:clamp(19px,5.6vw,25px);margin:14px 0 4px;letter-spacing:.04em;}
+.ptitle.flow{background:linear-gradient(100deg,#ece4d6,#ff5a66,#ece4d6);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:flow 7s linear infinite;}
+.ptitle-en{font-family:var(--mono);font-size:10px;letter-spacing:.28em;color:var(--ink-faint);margin-bottom:8px;}
+.body{font-family:var(--serif);font-weight:400;color:var(--ink-soft);line-height:2;letter-spacing:.02em;font-size:clamp(13px,3.7vw,15.5px);overflow:auto;-webkit-overflow-scrolling:touch;padding-right:4px;}
+.body::-webkit-scrollbar{width:3px;}
+.body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+.body p{margin:0 0 12px;text-indent:2em;}
+.dropcap::first-letter{font-size:2.6em;font-weight:900;color:var(--blood);float:left;line-height:.82;margin:6px 8px 0 0;text-shadow:0 0 14px rgba(196,18,31,.4);}
+
+/* page 2 instructions */
+.howto-list{list-style:none;margin:6px 0 0;padding:0;overflow:auto;}
+.howto-list li{position:relative;padding:11px 0 11px 38px;border-bottom:1px dashed var(--line-soft);font-size:13.5px;color:var(--ink-soft);line-height:1.7;font-family:var(--sans);}
+.howto-list li .n{position:absolute;left:0;top:10px;font-family:var(--mono);color:var(--blood);font-size:12px;border:1px solid var(--line);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.howto-list li b{color:var(--ink);font-weight:700;}
+
+/* synopsis variants */
+.syn2{flex:1;display:flex;flex-direction:column;}
+.syn2 .barwrap{display:flex;gap:14px;flex:1;overflow:hidden;}
+.syn2 .vbar{width:3px;border-radius:3px;background:linear-gradient(180deg,var(--blood),transparent);}
+.bigquote{font-family:var(--serif);font-weight:900;font-size:64px;color:var(--blood);line-height:.6;height:34px;opacity:.5;}
+.syn3 .grid2{columns:2;column-gap:18px;column-rule:1px solid var(--line-soft);font-size:12.5px;line-height:1.95;}
+.syn4 .body{text-align:justify;}
+.coda{margin-top:14px;text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:var(--ink-faint);}
+
+/* ===== final choices ===== */
+.choices{flex:1;overflow:auto;padding-right:4px;}
+.choices::-webkit-scrollbar{width:3px;}
+.choices::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+.mode-h{display:flex;align-items:center;gap:8px;margin:14px 0 8px;font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:var(--blood);}
+.mode-h::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+.opt{
+  position:relative;display:flex;gap:11px;align-items:flex-start;
+  padding:11px 12px;margin-bottom:9px;border-radius:4px;cursor:pointer;
+  background:linear-gradient(120deg,rgba(196,18,31,.05),rgba(236,228,214,.015));
+  border:1px solid var(--line-soft);
+  transition:transform .18s ease,border-color .25s ease,background .25s ease;
+  overflow:hidden;
+}
+.opt:active{transform:scale(.985);}
+.opt.sel{border-color:var(--blood);background:linear-gradient(120deg,rgba(196,18,31,.16),rgba(196,18,31,.03));box-shadow:inset 0 0 0 1px rgba(255,43,58,.25);}
+.opt .idx{font-family:var(--mono);font-size:13px;color:var(--blood-bright);min-width:22px;font-weight:600;padding-top:1px;}
+.opt .otext{font-family:var(--sans);font-size:12.8px;line-height:1.62;color:var(--ink-soft);}
+.opt::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.10),transparent);transition:left .6s ease;}
+.opt:hover::after{left:130%;}
+
+/* ===== controls ===== */
+.nav{
+  position:fixed;left:0;right:0;bottom:max(16px,env(safe-area-inset-bottom));z-index:30;
+  display:flex;align-items:center;justify-content:center;gap:14px;pointer-events:none;
+}
+.nav-btn{
+  pointer-events:auto;width:50px;height:50px;border-radius:50%;
+  background:linear-gradient(180deg,#1b100f,#0d0707);
+  border:1px solid var(--line);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .15s ease,opacity .25s ease,border-color .25s ease;
+  position:relative;overflow:hidden;
+}
+.nav-btn:active{transform:scale(.9);}
+.nav-btn:disabled{opacity:.28;cursor:default;}
+.nav-btn svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:1.6;}
+.nav-btn .glow{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 0 rgba(255,43,58,.5);}
+.pageind{pointer-events:none;font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--ink-faint);min-width:62px;text-align:center;}
+.pageind b{color:var(--blood-bright);}
+
+/* music player */
+.player{
+  position:fixed;top:max(14px,env(safe-area-inset-top));right:14px;z-index:31;
+  display:flex;align-items:center;gap:9px;
+  padding:7px 12px 7px 9px;border-radius:30px;
+  background:rgba(13,7,7,.78);backdrop-filter:blur(8px);
+  border:1px solid var(--line);
+}
+.player .disc{
+  width:26px;height:26px;border-radius:50%;
+  background:repeating-radial-gradient(circle at 50% 50%,#241312 0 2px,#160b0b 2px 4px);
+  border:1px solid rgba(196,18,31,.45);position:relative;
+  animation:spin 4s linear infinite;animation-play-state:paused;
+}
+.player.playing .disc{animation-play-state:running;}
+.player .disc::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--blood);}
+@keyframes spin{to{transform:rotate(360deg)}}
+.player .ptxt{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--ink-soft);max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.player .pbtn{background:none;border:none;color:var(--blood-bright);cursor:pointer;font-family:var(--mono);font-size:14px;padding:2px 4px;}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;top:64px;transform:translateX(-50%) translateY(-12px);
+  z-index:60;background:rgba(13,7,7,.92);border:1px solid var(--blood);
+  color:var(--ink);font-family:var(--sans);font-size:12.5px;letter-spacing:.04em;
+  padding:10px 16px;border-radius:6px;opacity:0;pointer-events:none;
+  transition:opacity .3s ease,transform .3s ease;max-width:80vw;text-align:center;
+  box-shadow:0 0 22px rgba(196,18,31,.25);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ripple click feedback */
+.ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,43,58,.5),transparent 70%);transform:translate(-50%,-50%) scale(0);pointer-events:none;animation:rip .6s ease-out forwards;z-index:80;}
+@keyframes rip{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+.rip-spark{width:120px;height:120px;}
+
+/* intro overlay */
+.intro{position:fixed;inset:0;z-index:90;background:radial-gradient(circle at 50% 50%,#160a0b,#060304);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;transition:opacity .8s ease;}
+.intro.gone{opacity:0;pointer-events:none;}
+.intro .seal{font-family:var(--mono);letter-spacing:.4em;color:var(--blood);font-size:12px;}
+.intro .ttl{font-family:var(--serif);font-weight:900;font-size:20px;color:var(--ink);letter-spacing:.1em;}
+.intro .ld{width:120px;height:2px;background:var(--line-soft);overflow:hidden;border-radius:2px;}
+.intro .ld i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blood),var(--blood-bright));animation:load 1.8s ease forwards;}
+@keyframes load{to{width:100%}}
+
+@media (max-width:380px){
+  .pad{padding:24px 20px 58px 24px;}
+  .body{line-height:1.9;}
+}
+</style>
+</head>
+<body>
+
+<div class="intro" id="intro">
+  <div class="seal">CONFIDENTIAL · 段 氏 档 案</div>
+  <div class="ttl">长眠者的无明妒火</div>
+  <div class="ld"><i></i></div>
+</div>
+
+<!-- music player -->
+<div class="player" id="player">
+  <div class="disc"></div>
+  <div class="ptxt" id="ptxt">未载入音轨</div>
+  <button class="pbtn" id="pbtn" aria-label="播放/暂停">▶</button>
+  <audio id="audio" loop preload="none"></audio>
+</div>
+
+<div class="stage" id="stage">
+  <div class="scene" id="scene">
+    <div class="bookbody">
+      <span class="edge right"></span>
+      <span class="edge left"></span>
+    </div>
+    <!-- pages injected by JS -->
+  </div>
+</div>
+
+<!-- nav -->
+<div class="nav">
+  <button class="nav-btn" id="prev" aria-label="上一页" disabled>
+    <svg viewBox="0 0 24 24"><polyline points="15 5 8 12 15 19"></polyline></svg>
+  </button>
+  <div class="pageind" id="ind">封面</div>
+  <button class="nav-btn" id="next" aria-label="下一页">
+    <svg viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"></polyline></svg>
+    <span class="glow"></span>
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const IMG = "https://i.postimg.cc/2yB9DnP0/file-000000002e847207bb5af5d538442593.png";
+
+/* ---------- page templates ---------- */
+const pages = [
+  // 0 COVER
+  `<div class="face front">
+     <div class="cover-foil"></div>
+     <div class="cover-content">
+       <div>
+         <div class="dossier-no">CASE NO. 0°-DUAN / 段宅秘录</div>
+         <div class="dossier-sub">RESTRICTED FILE · 阴 阳 交 界 · 死 亡 拥 抱</div>
+       </div>
+       <h1 class="cover-title">
+         <span class="small">【现代悬疑 / 灵异奇幻 / 极致病娇 / 豪门纠葛】</span>
+         <span class="flow">长眠者的无明妒火</span>
+         <span style="font-size:.62em;display:block;margin-top:6px;color:var(--ink-soft);">未亡人的绝命拥抱</span>
+       </h1>
+       <div class="cover-author">著 · <b>0°</b></div>
+       <div class="cover-tags">
+         <span class="tag">现代悬疑</span><span class="tag">灵异奇幻</span>
+         <span class="tag">极致病娇</span><span class="tag">豪门纠葛</span>
+       </div>
+     </div>
+     <div class="clasp" id="clasp">
+       <span class="band"></span>
+       <span class="lock"><span class="keyhole"></span></span>
+       <span class="clasp-hint">轻 触 锁 扣 · 启 封</span>
+     </div>
+   </div>
+   <div class="face back"></div>`,
+
+  // 1 IMAGE
+  `<div class="face front imgpage">
+     <span class="cmark tl">EXHIBIT — 01</span>
+     <span class="stamp">SEALED</span>
+     <div class="pad">
+       <div class="photo">
+         <img src="${IMG}" alt="档案影像" referrerpolicy="no-referrer" onerror="this.style.display='none';this.closest('.photo').classList.add('noimg');" onload="this.closest('.photo').classList.add('okimg');" />
+         <div class="scan"></div><div class="vig"></div>
+         <div class="photo-cap"><span>段宅 · 午夜实录</span><span>NO SIGNAL · ${"\u2014"}</span></div>
+       </div>
+     </div>
+     <span class="cmark br">影像编号 · D-0613</span>
+   </div>
+   <div class="face back"></div>`,
+
+  // 2 使用说明
+  `<div class="face front">
+     <span class="cmark tl">SECTION — Ⅰ</span><span class="cmark tr">MANUAL</span>
+     <div class="pad">
+       <div class="kicker">使 用 说 明<span class="ln"></span>HOW TO READ</div>
+       <h2 class="ptitle flow">启封须知</h2>
+       <div class="ptitle-en">INSTRUCTIONS FOR THE UNDYING FILE</div>
+       <div class="rule"></div>
+       <ul class="howto-list">
+         <li><span class="n">1</span>点击底部 <b>左右箭头</b> 翻页；<b>向左右滑动</b>书页亦可前后翻阅。</li>
+         <li><span class="n">2</span>封面锁扣开启后逐页展开：<b>影像 → 简介 → 开场白</b>。</li>
+         <li><span class="n">3</span>右上角 <b>唱片</b> 为音乐播放器，请自行提供音轨链接。</li>
+         <li><span class="n">4</span>末页为 <b>动态开场白列表</b>，点选其一即开启对应剧情。</li>
+         <li><span class="n">5</span>本档涉及病娇、灵异、悬疑设定，请确认可接受后再继续。</li>
+       </ul>
+     </div>
+     <span class="cmark bl">著 · 0°</span><span class="cmark br">P.02</span>
+   </div>
+   <div class="face back"></div>`,
+
+  // 3 简介 段一
+  `<div class="face front">
+     <span class="cmark tl">SECTION — Ⅱ</span><span class="cmark tr">SYNOPSIS</span>
+     <div class="pad">
+       <div class="kicker">故 事 简 介<span class="ln"></span>Ⅰ / Ⅳ</div>
+       <h2 class="ptitle">死气沉沉的老宅</h2>
+       <div class="ptitle-en">THE DUAN MANSION</div>
+       <div class="rule"></div>
+       <div class="body dropcap" style="margin-top:14px;">
+         <p style="text-indent:0;">在这座死气沉沉的段家老宅里，你顶着"段执郁妻子"的身份，走入了一场看不见硝烟的豪门漩涡。你的丈夫在一场蹊跷的车祸中英年早逝，留给你的只有危机四伏的集团权斗、步步紧逼的段府亲眷，以及令人窒息的漫长孤寂。</p>
+       </div>
+     </div>
+     <span class="cmark br">P.03</span>
+   </div>
+   <div class="face back"></div>`,
+
+  // 4 简介 段二
+  `<div class="face front">
+     <span class="cmark tl">SECTION — Ⅱ</span><span class="cmark tr">SYNOPSIS</span>
+     <div class="pad">
+       <div class="kicker">亡 者 未 眠<span class="ln"></span>Ⅱ / Ⅳ</div>
+       <h2 class="ptitle flow">他并未长眠</h2>
+       <div class="ptitle-en">DEATH, THE CATALYST OF LOVE</div>
+       <div class="syn2">
+         <div class="bigquote">&ldquo;</div>
+         <div class="barwrap">
+           <div class="vbar"></div>
+           <div class="body" style="text-indent:0;">
+             <p style="text-indent:0;">然而，亡者并未真正长眠，死亡不过是他爱意变质的催化剂。每当午夜降临，卧房里骤降的温度、镜面上凭空浮现的水汽字迹、以及被褥间那令人战栗的冰冷重压，无一不在向你宣告他那病态而狂热的陪伴。</p>
+             <p>段执郁的灵魂跨越了生死的界限，化作执念深重的森冷凶影，以一种更为绝对、更为越界的方式，将你死死圈禁在他的私有领地之中。</p>
+           </div>
+         </div>
+       </div>
+     </div>
+     <span class="cmark br">P.04</span>
+   </div>
+   <div class="face back"></div>`,
+
+  // 5 简介 段三
+  `<div class="face front">
+     <span class="cmark tl">SECTION — Ⅱ</span><span class="cmark tr">SYNOPSIS</span>
+     <div class="pad">
+       <div class="kicker">内 外 交 困<span class="ln"></span>Ⅲ / Ⅳ</div>
+       <h2 class="ptitle">蛛网般收拢</h2>
+       <div class="ptitle-en">SCHEMES WITHIN &amp; WITHOUT</div>
+       <div class="rule"></div>
+       <div class="body grid2 syn3" style="margin-top:14px;text-indent:0;">
+         <p style="text-indent:0;">外有段承衍步步为营的试探与野心，深藏着无法言说的隐秘企图；内有未能被时间掩盖的命案线索，直指那场雨夜车祸的阴晦真相。</p>
+         <p>当未知的危险如同蛛网般向你收拢时，那个看不见、摸不着的"他"，成为了你最可怕的梦魇，却也是最无坚不摧的庇护所。</p>
+       </div>
+     </div>
+     <span class="cmark bl">CLUE · 雨夜车祸</span><span class="cmark br">P.05</span>
+   </div>
+   <div class="face back"></div>`,
+
+  // 6 简介 段四
+  `<div class="face front">
+     <span class="cmark tl">SECTION — Ⅱ</span><span class="cmark tr">SYNOPSIS</span>
+     <div class="pad">
+       <div class="kicker">人 鬼 同 途<span class="ln"></span>Ⅳ / Ⅳ</div>
+       <h2 class="ptitle flow">无处可逃</h2>
+       <div class="ptitle-en">THE ABYSS OF THE LIVING &amp; THE DEAD</div>
+       <div class="rule"></div>
+       <div class="body syn4" style="margin-top:14px;text-align:justify;">
+         <p>你被迫卷入这场人鬼同途的深渊，在冰冷刺骨的拥抱中，用躯体与神魂去丈量那血淋淋的真相。面对那些针对你而来的重重迷局，以及长眠者那不容抗拒的浓烈贪痴，你早已无处可逃。</p>
+         <p>你唯有在这迷离而危险的阴阳交界处，于他的执念网罗之中彻底沉沦，成为他灵魂永恒溃散前唯一救赎的锚点。</p>
+       </div>
+       <div class="coda">— 你 是 他 唯 一 的 锚 点 —</div>
+     </div>
+     <span class="cmark br">P.06</span>
+   </div>
+   <div class="face back"></div>`,
+
+  // 7 开场白选择
+  `<div class="face front">
+     <span class="cmark tl">SECTION — Ⅲ</span><span class="cmark tr">PROLOGUE</span>
+     <div class="pad">
+       <div class="kicker">动 态 开 场 白<span class="ln"></span>SELECT ENTRY</div>
+       <h2 class="ptitle flow">开场白选择</h2>
+       <div class="ptitle-en">CHOOSE YOUR BEGINNING</div>
+       <div class="choices">
+         <div class="mode-h">文 字 剧 情 模 式 · TEXT</div>
+         <div class="opt" data-c="1"><span class="idx">01</span><span class="otext">{{user}}被董事会老狐狸段承衍刁难，段执郁旁听。</span></div>
+         <div class="opt" data-c="2"><span class="idx">02</span><span class="otext">{{user}}改嫁新丈夫楚晏，段执郁吃飞醋。</span></div>
+         <div class="opt" data-c="3"><span class="idx">03</span><span class="otext">{{user}}前往段执郁的死亡地点收集线索，一辆黑车驶过来。</span></div>
+         <div class="opt" data-c="4"><span class="idx">04</span><span class="otext">段执郁睡奸入梦的{{user}}，{{user}}对此"一无所知"。</span></div>
+         <div class="mode-h">视 觉 小 说 模 式 · VISUAL</div>
+         <div class="opt" data-c="5"><span class="idx">05</span><span class="otext">段承衍、陆漫声、沈鸢等人被暂定为谋害段执郁的嫌疑人，在警局各执其词，疑点重重。</span></div>
+         <div class="opt" data-c="6"><span class="idx">06</span><span class="otext">段执郁死后，{{user}}与段承衍偷情；其实真凶是{{user}}，目的是光明正大和段承衍在一起。</span></div>
+         <div class="opt" data-c="7"><span class="idx">07</span><span class="otext">{{user}}一觉醒来，时间已回溯到段执郁死亡的前一天。</span></div>
+         <div class="opt" data-c="8"><span class="idx">08</span><span class="otext">全员穿越到民国时期，各自身份不同。</span></div>
+       </div>
+     </div>
+     <span class="cmark br">END · 0°</span>
+   </div>
+   <div class="face back"></div>`
+];
+
+/* ---------- build pages ---------- */
+const scene = document.getElementById('scene');
+const N = pages.length;
+const pageEls = [];
+for(let i=0;i<N;i++){
+  const d=document.createElement('div');
+  d.className='page'+(i===0?' cover':'');
+  d.dataset.i=i;
+  d.innerHTML=pages[i];
+  scene.appendChild(d);
+  pageEls.push(d);
+}
+
+let flipped = 0;            // number of pages turned to the left
+let busy = false;
+const indEl=document.getElementById('ind');
+const prevBtn=document.getElementById('prev');
+const nextBtn=document.getElementById('next');
+
+function applyZ(){
+  for(let i=0;i<N;i++){
+    const p=pageEls[i];
+    if(i<flipped){p.classList.add('flipped');p.style.zIndex=i;}
+    else{p.classList.remove('flipped');p.style.zIndex=N-i;}
+  }
+}
+function label(){
+  if(flipped===0) return '封面';
+  if(flipped===N) return '完';
+  return String(flipped).padStart(2,'0')+' / '+String(N-1).padStart(2,'0');
+}
+function refresh(){
+  applyZ();
+  indEl.innerHTML = flipped===0?'封面':(flipped>=N-1? '<b>'+label()+'</b>':label());
+  prevBtn.disabled = flipped===0;
+  nextBtn.disabled = flipped>=N-1;
+  nextBtn.style.opacity = flipped>=N-1? .28:1;
+}
+
+function turn(dir){
+  if(busy) return;
+  if(dir>0 && flipped>=N-1) return;
+  if(dir<0 && flipped<=0) return;
+  busy=true;
+  const idx = dir>0? flipped : flipped-1;
+  const p=pageEls[idx];
+  p.classList.add('animating');
+  // update flipped + state immediately so z/transform animate
+  flipped += dir;
+  refresh();
+  setTimeout(()=>{p.classList.remove('animating');busy=false;},1080);
+}
+
+prevBtn.addEventListener('click',e=>{spark(e);turn(-1);});
+nextBtn.addEventListener('click',e=>{spark(e);turn(1);});
+refresh();
+
+/* lock clasp opens the book */
+function bindClasp(){
+  const clasp=document.getElementById('clasp');
+  if(!clasp) return;
+  clasp.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(flipped>0) return;
+    spark(e);
+    clasp.classList.add('unlocking');
+    setTimeout(()=>turn(1),420);
+  });
+}
+bindClasp();
+
+/* ---------- choices ---------- */
+scene.addEventListener('click',e=>{
+  const opt=e.target.closest('.opt');
+  if(!opt) return;
+  scene.querySelectorAll('.opt.sel').forEach(o=>o.classList.remove('sel'));
+  opt.classList.add('sel');
+  spark(e);
+  showToast('已选择开场白 '+opt.dataset.c+' · 即将开启此线');
+});
+
+/* ---------- swipe ---------- */
+let sx=0,sy=0,st=0,sw=false;
+const stage=document.getElementById('stage');
+stage.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();sw=false;},{passive:true});
+stage.addEventListener('touchmove',e=>{
+  const t=e.touches[0];const dx=t.clientX-sx,dy=t.clientY-sy;
+  if(Math.abs(dx)>Math.abs(dy)) {sw=true;}
+},{passive:true});
+stage.addEventListener('touchend',e=>{
+  const t=e.changedTouches[0];const dx=t.clientX-sx,dy=t.clientY-sy;
+  if(sw && Math.abs(dx)>46 && Math.abs(dx)>Math.abs(dy)){
+    if(dx<0) turn(1); else turn(-1);
+  }
+});
+/* mouse drag for desktop preview */
+let md=false,mx=0;
+stage.addEventListener('mousedown',e=>{md=true;mx=e.clientX;});
+window.addEventListener('mouseup',e=>{
+  if(!md) return;md=false;const dx=e.clientX-mx;
+  if(Math.abs(dx)>60){ if(dx<0) turn(1); else turn(-1);}
+});
+/* keyboard */
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') turn(1);
+  if(e.key==='ArrowLeft') turn(-1);
+});
+
+/* ---------- click spark / ripple ---------- */
+function spark(e){
+  const x=(e.clientX!=null?e.clientX:(e.touches&&e.touches[0]?e.touches[0].clientX:innerWidth/2));
+  const y=(e.clientY!=null?e.clientY:(e.touches&&e.touches[0]?e.touches[0].clientY:innerHeight/2));
+  const r=document.createElement('span');
+  r.className='ripple rip-spark';
+  r.style.left=x+'px';r.style.top=y+'px';
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(),600);
+}
+document.body.addEventListener('click',spark);
+
+/* ---------- toast ---------- */
+let toastT;
+const toastEl=document.getElementById('toast');
+function showToast(msg){
+  toastEl.textContent=msg;toastEl.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),2600);
+}
+
+/* ---------- music player ---------- */
+const player=document.getElementById('player');
+const audio=document.getElementById('audio');
+const pbtn=document.getElementById('pbtn');
+const ptxt=document.getElementById('ptxt');
+// To enable music, set MUSIC_URL below to your audio link.
+const MUSIC_URL = ""; // <-- 在此粘贴音乐链接
+if(MUSIC_URL){audio.src=MUSIC_URL;ptxt.textContent='段宅夜曲';}
+pbtn.addEventListener('click',e=>{
+  e.stopPropagation();
+  if(!MUSIC_URL){
+    showToast('请提供音乐链接：在代码中设置 MUSIC_URL 即可启用播放器');
+    return;
+  }
+  if(audio.paused){audio.play();player.classList.add('playing');pbtn.textContent='❚❚';}
+  else{audio.pause();player.classList.remove('playing');pbtn.textContent='▶';}
+});
+
+/* ---------- intro fade ---------- */
+window.addEventListener('load',()=>{
+  setTimeout(()=>{document.getElementById('intro').classList.add('gone');},1900);
+  // gentle reminder about music link
+  setTimeout(()=>{ if(!MUSIC_URL) showToast('提示：音乐播放器已就位，请提供音乐链接以启用'); },2600);
+});
+</script>
+</body>
+</html>
